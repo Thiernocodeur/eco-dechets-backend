@@ -7,6 +7,8 @@ import { ReportController } from './report/report.controller';
 import { ReportService } from './report/report.service';
 import { Report } from './report/report.entity';
 import { ReportRepository } from './report/report.repository';
+import { AuthModule } from './auth/auth.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -26,7 +28,11 @@ import { ReportRepository } from './report/report.repository';
       inject: [ConfigService],
     }),
     
-    TypeOrmModule.forFeature([Report, ReportRepository]), // Import des entités et repository
+    TypeOrmModule.forFeature([Report, ReportRepository]),
+    
+    AuthModule,
+    
+    UserModule, // Import des entités et repository
   ],
   controllers: [AppController, ReportController],
   providers: [AppService, ReportService],

@@ -2,9 +2,12 @@ import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common'
 import { ReportService } from './report.service';
 import { Report } from './report.entity';
 
+
 @Controller('reports')
 export class ReportController {
   constructor(private readonly reportService: ReportService) {}
+
+ 
 
   @Get()
   findAll(): Promise<Report[]> {
