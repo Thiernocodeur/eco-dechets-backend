@@ -1,40 +1,30 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ReportController } from './report/report.controller';
-import { ReportService } from './report/report.service';
-import { Report } from './report/report.entity';
-import { ReportRepository } from './report/report.repository';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
+import { WasteModule } from './waste/waste.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot(), // Charge les variables d'environnement
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        type: 'mysql',
-        host: configService.get<string>('DB_HOST'),
-        port: configService.get<number>('DB_PORT'),
-        username: configService.get<string>('DB_USERNAME'),
-        password: configService.get<string>('DB_PASSWORD'),
-        database: configService.get<string>('DB_DATABASE'),
-        entities: [__dirname + '/../dist/**/*.entity{.ts,.js}'], // Mise à jour pour les fichiers .js
-        synchronize: true,
-      }),
-      inject: [ConfigService],
+    TypeOrmModule.forRoot({
+      type: 'mysql',
+      host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT, 10),
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_DATABASE,
+      entities: [__dirname + '/../dist/**/*.entity{.ts,.js}'], // Mise à jour pour les fichiers .js
+      synchronize: true,
     }),
-    
-    TypeOrmModule.forFeature([Report, ReportRepository]),
-    
     AuthModule,
-    
-    UserModule, // Import des entités et repository
+    UserModule,
+    WasteModule,
   ],
-  controllers: [AppController, ReportController],
-  providers: [AppService, ReportService],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

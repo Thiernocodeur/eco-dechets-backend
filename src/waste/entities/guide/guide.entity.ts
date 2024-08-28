@@ -1,16 +1,16 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
-export class User {
+export class Guide {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
-  username: string;
-
-  @Column({ unique: true }) // Assurez-vous que l'email est unique
-  email: string;
+  title: string;
 
   @Column()
-  password: string;
+  description: string;
+
+  @Column({ default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
 }

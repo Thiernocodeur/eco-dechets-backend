@@ -1,20 +1,57 @@
-// src/auth/auth.service.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { UserService } from '../user/user.service';
+import { CreateUserDto } from '../user/create-user.dto';
+import { LoginUserDto } from './login-user.dto'; 
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
-  validateUser(username: string, password: string) {
-      throw new Error('Method not implemented.');
-  }
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly jwtService: JwtService,
+  ) {}
 
-  async login(user: any) {
-    const payload = { username: user.username, sub: user.userId };
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
+  async register(createUserDto: CreateUserDto): Promise<{ accessToken: string }> {
+    // Vérifier si l'email existe déjà
+    const existingUser = await this.userService.findByEmail(createUserDto.email);
+    if (existingUser) {
+      throw new ConflictException('Email déjà utilisé');
+    }
+
+    // Hash du mot de passe
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+
+    // Création de l'utilisateur
+    const user = await this.userService.create({
+      ...createUserDto,
+      password: hashedPassword,
+    });
+
+    // Génération du token JWT
+    const payload = { username: user.username, sub: user.id };
+    const accessToken = this.jwtService.sign(payload);
+
+    return { accessToken };
   }
 
-  // Vous pouvez ajouter une méthode pour valider l'utilisateur ici
+  async login(loginUserDto: LoginUserDto): Promise<{ accessToken: string }> {
+    const user = await this.userService.findByEmail(loginUserDto.email);
+
+    if (!user) {
+      throw new UnauthorizedException('Email ou mot de passe incorrect');
+    }
+
+    const isPasswordValid = await bcrypt.compare(loginUserDto.password, user.password);
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Email ou mot de passe incorrect');
+    }
+
+    // Génération du token JWT
+    const payload = { username: user.username, sub: user.id };
+    const accessToken = this.jwtService.sign(payload);
+
+    return { accessToken };
+  }
 }
